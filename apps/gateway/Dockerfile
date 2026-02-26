@@ -20,6 +20,7 @@ RUN corepack enable
 FROM base AS build
 
 WORKDIR /app
+ENV CI=true
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/gateway/package.json apps/gateway/package.json
