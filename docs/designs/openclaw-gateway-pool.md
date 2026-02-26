@@ -261,6 +261,56 @@ apps/gateway-pool (N 个)
 3. 转发到 `http://${podIp}:18789/slack/events/{accountId}`。
 4. 转发失败返回 202 并记录结构化日志（避免 Slack 无限重试）。
 
+## 交互时序图（Mermaid）
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Web as apps/web
+  participant API as apps/api (Control Plane)
+  participant DB as PostgreSQL
+  participant SC as runtime-sidecar
+  participant GW as openclaw gateway
+  participant Slack as Slack
+
+  Note over SC,GW: Pool Node = sidecar + gateway
+
+  Web->>API: POST /v1/bots { name, slug, poolId? }
+  API->>DB: 写 bots + gateway_assignments (事务)
+  API-->>Web: 200 bot
+
+  SC->>GW: 等待 gateway ready
+  SC->>API: internal.pool.register(poolId, podIp, status)
+  API->>DB: upsert gateway_pools(status, pod_ip, last_heartbeat)
+  API-->>SC: ok
+
+  loop 每 N 秒
+    SC->>API: internal.pool.heartbeat(poolId, status, podIp, lastSeenVersion)
+    API->>DB: update gateway_pools(last_heartbeat, status, pod_ip)
+    API-->>SC: ok
+  end
+
+  loop 轮询配置
+    SC->>API: internal.pool.getConfig(poolId)
+    API->>DB: 读取 bots/channels/credentials + pool_config_snapshots
+    API-->>SC: OpenClawConfig (+ version/hash)
+    alt 配置有变化
+      SC->>SC: schema 校验 + tmp+rename 原子写 OPENCLAW_CONFIG_PATH
+      GW->>GW: reload.mode=hybrid 热更新 (PID 不变)
+      SC->>API: internal.pool.heartbeat(..., lastSeenVersion)
+      API->>DB: 更新 last_heartbeat/status
+    else 配置无变化
+      SC->>SC: 跳过写盘
+    end
+  end
+
+  Slack->>API: POST /api/slack/events
+  API->>DB: 查 webhook_routes(team_id) + gateway_pools(pod_ip)
+  API->>GW: 转发 /slack/events/{accountId}
+  GW-->>API: 处理结果
+  API-->>Slack: 响应 (失败时 202)
+```
+
 ---
 
 ## Sidecar 轮询策略（建议）
