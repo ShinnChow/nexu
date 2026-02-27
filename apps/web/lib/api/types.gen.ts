@@ -233,6 +233,29 @@ export type PatchApiInternalSessionsByIdResponses = {
 
 export type PatchApiInternalSessionsByIdResponse = PatchApiInternalSessionsByIdResponses[keyof PatchApiInternalSessionsByIdResponses];
 
+export type GetV1MeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/me';
+};
+
+export type GetV1MeResponses = {
+    /**
+     * Current user profile
+     */
+    200: {
+        id: string;
+        email: string;
+        name: string;
+        image?: string;
+        plan: string;
+        inviteAccepted: boolean;
+    };
+};
+
+export type GetV1MeResponse = GetV1MeResponses[keyof GetV1MeResponses];
+
 export type GetV1BotsData = {
     body?: never;
     path?: never;
@@ -867,12 +890,14 @@ export type GetApiInternalPoolsByPoolIdConfigResponses = {
                         webhookPath?: string;
                         dmPolicy?: 'pairing' | 'allowlist' | 'open';
                         groupPolicy?: 'open' | 'allowlist' | 'disabled';
+                        streaming?: 'off' | 'partial' | 'block' | 'progress';
                     };
                 };
             };
             discord?: {
                 enabled?: boolean;
                 groupPolicy?: 'open' | 'allowlist' | 'disabled';
+                dmPolicy?: 'pairing' | 'allowlist' | 'open';
                 accounts: {
                     [key: string]: {
                         enabled?: boolean;
@@ -1057,12 +1082,14 @@ export type GetApiInternalPoolsByPoolIdConfigLatestResponses = {
                             webhookPath?: string;
                             dmPolicy?: 'pairing' | 'allowlist' | 'open';
                             groupPolicy?: 'open' | 'allowlist' | 'disabled';
+                            streaming?: 'off' | 'partial' | 'block' | 'progress';
                         };
                     };
                 };
                 discord?: {
                     enabled?: boolean;
                     groupPolicy?: 'open' | 'allowlist' | 'disabled';
+                    dmPolicy?: 'pairing' | 'allowlist' | 'open';
                     accounts: {
                         [key: string]: {
                             enabled?: boolean;
@@ -1201,12 +1228,14 @@ export type GetApiInternalPoolsByPoolIdConfigVersionsByVersionResponses = {
                             webhookPath?: string;
                             dmPolicy?: 'pairing' | 'allowlist' | 'open';
                             groupPolicy?: 'open' | 'allowlist' | 'disabled';
+                            streaming?: 'off' | 'partial' | 'block' | 'progress';
                         };
                     };
                 };
                 discord?: {
                     enabled?: boolean;
                     groupPolicy?: 'open' | 'allowlist' | 'disabled';
+                    dmPolicy?: 'pairing' | 'allowlist' | 'open';
                     accounts: {
                         [key: string]: {
                             enabled?: boolean;
