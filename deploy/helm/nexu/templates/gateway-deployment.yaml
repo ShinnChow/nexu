@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "nexu.gateway.fullname" . }}
   namespace: {{ include "nexu.namespace" . }}
@@ -7,6 +7,9 @@ metadata:
     {{- include "nexu.labels" . | nindent 4 }}
     app.kubernetes.io/component: gateway
 spec:
+  serviceName: {{ include "nexu.gateway.fullname" . }}
+  ordinals:
+    start: 1
   {{- if not .Values.gateway.hpa.enabled }}
   replicas: {{ .Values.gateway.replicas }}
   {{- end }}
@@ -39,12 +42,12 @@ spec:
                 secretKeyRef:
                   name: {{ include "nexu.secretName" . }}
                   key: INTERNAL_API_TOKEN
-            - name: RUNTIME_POOL_ID
+            - name: ORDINAL
               valueFrom:
-                configMapKeyRef:
-                  name: {{ include "nexu.configMapName" . }}
-                  key: RUNTIME_POOL_ID
-                  optional: true
+                fieldRef:
+                  fieldPath: "metadata.labels['apps.kubernetes.io/pod-index']"
+            - name: RUNTIME_POOL_ID
+              value: gateway_pool_$(ORDINAL)
             - name: RUNTIME_MANAGE_OPENCLAW_PROCESS
               valueFrom:
                 configMapKeyRef:
