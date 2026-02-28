@@ -163,14 +163,6 @@ export function AuthPage() {
     }
   };
 
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
-      </div>
-    );
-  }
-
   useEffect(() => {
     if (!session?.user) return;
     setUserId(session.user.id);
@@ -190,6 +182,14 @@ export function AuthPage() {
       });
     }
   }, [session?.user]);
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
+      </div>
+    );
+  }
 
   if (session?.user) {
     return <Navigate to="/invite" replace />;
