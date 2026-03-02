@@ -80,7 +80,7 @@ jobs:
         with:
           script: |
             const workerName = '${{ steps.slug.outputs.worker_name }}';
-            const previewUrl = `https://${workerName}.refly-ai.workers.dev`;
+            const previewUrl = `https://${workerName}.powerformer.workers.dev`;
             const body = `## Preview Deployment
 
             | App | URL |
