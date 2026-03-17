@@ -2,6 +2,9 @@ import type {
   AppInfo,
   DesktopRuntimeConfig,
   HostDesktopCommand,
+  RuntimeEvent,
+  RuntimeEventQuery,
+  RuntimeEventQueryResult,
   RuntimeState,
   RuntimeUnitId,
   UpdateChannelName,
@@ -61,6 +64,13 @@ export async function showRuntimeLogFile(id: RuntimeUnitId): Promise<boolean> {
   return result.ok;
 }
 
+export async function queryRuntimeEvents(
+  input: RuntimeEventQuery,
+): Promise<RuntimeEventQueryResult> {
+  const result = await getHostBridge().invoke("runtime:query-events", input);
+  return result;
+}
+
 export async function ensureDesktopAuthSession(
   force = false,
 ): Promise<boolean> {
@@ -74,6 +84,12 @@ export function onDesktopCommand(
   listener: (command: HostDesktopCommand) => void,
 ): () => void {
   return getHostBridge().onDesktopCommand(listener);
+}
+
+export function onRuntimeEvent(
+  listener: (event: RuntimeEvent) => void,
+): () => void {
+  return getHostBridge().onRuntimeEvent(listener);
 }
 
 export async function checkForUpdate(): Promise<boolean> {

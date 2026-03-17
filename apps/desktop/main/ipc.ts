@@ -1,4 +1,4 @@
-import { app, ipcMain, shell } from "electron";
+import { BrowserWindow, app, ipcMain, shell } from "electron";
 import {
   type HostInvokePayloadMap,
   type HostInvokeResultMap,
@@ -32,6 +32,12 @@ function assertValidChannel(
 }
 
 export function registerIpcHandlers(orchestrator: RuntimeOrchestrator): void {
+  orchestrator.subscribe((runtimeEvent) => {
+    for (const window of BrowserWindow.getAllWindows()) {
+      window.webContents.send("host:runtime-event", runtimeEvent);
+    }
+  });
+
   ipcMain.handle(
     "host:invoke",
     async (_event, channel: string, payload: unknown) => {
@@ -101,6 +107,12 @@ export function registerIpcHandlers(orchestrator: RuntimeOrchestrator): void {
           };
 
           return result;
+        }
+
+        case "runtime:query-events": {
+          const typedPayload =
+            payload as HostInvokePayloadMap["runtime:query-events"];
+          return orchestrator.queryEvents(typedPayload);
         }
 
         case "desktop:ensure-auth-session": {

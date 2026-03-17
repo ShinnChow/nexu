@@ -8,9 +8,12 @@ import type {
   DesktopChromeMode,
   DesktopRuntimeConfig,
   DesktopSurface,
+  RuntimeEvent,
+  RuntimeLogEntry,
   RuntimeState,
   RuntimeUnitId,
   RuntimeUnitPhase,
+  RuntimeUnitSnapshot,
   RuntimeUnitState,
 } from "../shared/host";
 import { UpdateBanner } from "./components/update-banner";
@@ -21,6 +24,7 @@ import {
   getRuntimeState,
   installComponent,
   onDesktopCommand,
+  onRuntimeEvent,
   showRuntimeLogFile,
   startUnit,
   stopUnit,
@@ -64,6 +68,90 @@ function phaseTone(phase: RuntimeUnitPhase): string {
 
 function kindLabel(unit: RuntimeUnitState): string {
   return `${unit.kind} / ${unit.launchStrategy}`;
+}
+
+function formatLogLine(entry: RuntimeLogEntry): string {
+  const actionLabel = entry.actionId ? ` [action=${entry.actionId}]` : "";
+  return `#${entry.cursor} ${entry.ts} [${entry.stream}] [${entry.kind}] [reason=${entry.reasonCode}]${actionLabel} ${entry.message}`;
+}
+
+function logFilterLabel(filter: LogFilter): string {
+  switch (filter) {
+    case "errors":
+      return "Errors";
+    case "lifecycle":
+      return "Lifecycle";
+    default:
+      return "All";
+  }
+}
+
+type LogFilter = "all" | "errors" | "lifecycle";
+
+function mergeUnitSnapshot(
+  current: RuntimeUnitState,
+  snapshot: RuntimeUnitSnapshot,
+): RuntimeUnitState {
+  return {
+    ...current,
+    ...snapshot,
+  };
+}
+
+function applyRuntimeEvent(
+  current: RuntimeState,
+  event: RuntimeEvent,
+): RuntimeState {
+  switch (event.type) {
+    case "runtime:unit-state": {
+      const existingIndex = current.units.findIndex(
+        (unit) => unit.id === event.unit.id,
+      );
+
+      if (existingIndex === -1) {
+        return current;
+      }
+
+      const nextUnits = [...current.units];
+      const existingUnit = nextUnits[existingIndex];
+      if (!existingUnit) {
+        return current;
+      }
+      nextUnits[existingIndex] = mergeUnitSnapshot(existingUnit, event.unit);
+      return {
+        ...current,
+        units: nextUnits,
+      };
+    }
+    case "runtime:unit-log": {
+      const existingIndex = current.units.findIndex(
+        (unit) => unit.id === event.unitId,
+      );
+
+      if (existingIndex === -1) {
+        return current;
+      }
+
+      const target = current.units[existingIndex];
+      if (!target) {
+        return current;
+      }
+      if (target.logTail.some((entry) => entry.id === event.entry.id)) {
+        return current;
+      }
+
+      const nextUnits = [...current.units];
+      nextUnits[existingIndex] = {
+        ...target,
+        logTail: [...target.logTail, event.entry].slice(-200),
+      };
+
+      return {
+        ...current,
+        units: nextUnits,
+      };
+    }
+  }
 }
 
 function SurfaceButton({
@@ -156,6 +244,7 @@ function RuntimeUnitCard({
   onStop: (id: RuntimeUnitId) => Promise<void>;
   busy: boolean;
 }) {
+  const [logFilter, setLogFilter] = useState<LogFilter>("all");
   const isManaged = unit.launchStrategy === "managed";
   const canStart =
     isManaged &&
@@ -167,7 +256,9 @@ function RuntimeUnitCard({
 
   async function handleCopyLogs(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(unit.logTail.join("\n"));
+      await navigator.clipboard.writeText(
+        filteredLogTail.map((entry) => formatLogLine(entry)).join("\n"),
+      );
       toast.success(`Copied recent logs for ${unit.label}.`);
     } catch (error) {
       toast.error(
@@ -194,6 +285,17 @@ function RuntimeUnitCard({
       );
     }
   }
+
+  const filteredLogTail = useMemo(() => {
+    switch (logFilter) {
+      case "errors":
+        return unit.logTail.filter((entry) => entry.stream === "stderr");
+      case "lifecycle":
+        return unit.logTail.filter((entry) => entry.kind === "lifecycle");
+      default:
+        return unit.logTail;
+    }
+  }, [logFilter, unit.logTail]);
 
   return (
     <article className="runtime-card">
@@ -245,6 +347,18 @@ function RuntimeUnitCard({
           <dt>Exit code</dt>
           <dd>{unit.exitCode ?? "-"}</dd>
         </div>
+        <div>
+          <dt>Last reason</dt>
+          <dd>{unit.lastReasonCode ?? "-"}</dd>
+        </div>
+        <div>
+          <dt>Restarts</dt>
+          <dd>{unit.restartCount}</dd>
+        </div>
+        <div>
+          <dt>Last probe</dt>
+          <dd>{unit.lastProbeAt ?? "-"}</dd>
+        </div>
       </dl>
 
       {unit.lastError ? (
@@ -264,7 +378,17 @@ function RuntimeUnitCard({
         <div className="runtime-logs-head">
           <strong>Tail 200 logs</strong>
           <div className="runtime-logs-actions">
-            <span>{unit.logTail.length} lines</span>
+            <span>{filteredLogTail.length} lines</span>
+            {(["all", "errors", "lifecycle"] as const).map((filter) => (
+              <button
+                aria-pressed={logFilter === filter}
+                key={filter}
+                onClick={() => setLogFilter(filter)}
+                type="button"
+              >
+                {logFilterLabel(filter)}
+              </button>
+            ))}
             <button onClick={() => void handleCopyLogs()} type="button">
               Copy
             </button>
@@ -274,7 +398,9 @@ function RuntimeUnitCard({
           </div>
         </div>
         <pre className="runtime-log-tail">
-          {unit.logTail.length > 0 ? unit.logTail.join("\n") : "No logs yet."}
+          {filteredLogTail.length > 0
+            ? filteredLogTail.map((entry) => formatLogLine(entry)).join("\n")
+            : "No logs yet."}
         </pre>
       </div>
     </article>
@@ -315,11 +441,23 @@ function RuntimePage() {
 
   useEffect(() => {
     void loadState();
+    const unsubscribe = onRuntimeEvent((event) => {
+      setRuntimeState((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return applyRuntimeEvent(current, event);
+      });
+      setErrorMessage(null);
+    });
+
     const timer = window.setInterval(() => {
       void loadState();
-    }, 2000);
+    }, 15000);
 
     return () => {
+      unsubscribe();
       window.clearInterval(timer);
     };
   }, [loadState]);
