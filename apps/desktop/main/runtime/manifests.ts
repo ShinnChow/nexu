@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -28,6 +29,33 @@ function getBooleanEnv(name: string, fallback: boolean): boolean {
   }
 
   return value === "1" || value.toLowerCase() === "true";
+}
+
+/**
+ * Build a PATH prefix that puts a Node.js >= 22 binary first.
+ * OpenClaw requires Node 22.12+; in dev mode the system `node` may be
+ * older (e.g. nvm defaulting to v20).  We scan NVM_DIR for a v22 install
+ * and, if found, prepend its bin directory to the inherited PATH.
+ */
+function buildNode22Path(): string | undefined {
+  const nvmDir = process.env.NVM_DIR;
+  if (!nvmDir) return undefined;
+  try {
+    const versionsDir = resolve(nvmDir, "versions/node");
+    const dirs = readdirSync(versionsDir)
+      .filter((d) => d.startsWith("v22."))
+      .sort()
+      .reverse();
+    for (const d of dirs) {
+      const binDir = resolve(versionsDir, d, "bin");
+      if (existsSync(resolve(binDir, "node"))) {
+        return `${binDir}:${process.env.PATH ?? ""}`;
+      }
+    }
+  } catch {
+    /* nvm dir not present or unreadable */
+  }
+  return undefined;
 }
 
 function ensurePackagedOpenclawSidecar(
@@ -118,6 +146,7 @@ export function createRuntimeUnitManifests(
   const gatewayPoolId = runtimeConfig.gateway.poolId;
   const webUrl = runtimeConfig.urls.web;
   const authUrl = runtimeConfig.urls.auth;
+  const node22Path = buildNode22Path();
 
   // Keep all default ports and local URLs defined from this one manifest factory. Other desktop
   // entry points still mirror a few of these defaults directly, so changes here should be treated
@@ -129,8 +158,9 @@ export function createRuntimeUnitManifests(
       label: "Nexu Web Surface",
       kind: "surface",
       launchStrategy: "managed",
-      runner: "utility-process",
-      modulePath: webModulePath,
+      runner: "spawn",
+      command: "node",
+      args: [webModulePath],
       cwd: webSidecarRoot,
       port: webPort,
       startupTimeoutMs: 10_000,
@@ -175,8 +205,9 @@ export function createRuntimeUnitManifests(
       label: "Nexu API",
       kind: "service",
       launchStrategy: "managed",
-      runner: "utility-process",
-      modulePath: apiModulePath,
+      runner: "spawn",
+      command: "node",
+      args: [apiModulePath],
       cwd: apiSidecarRoot,
       port: apiPort,
       startupTimeoutMs: 20_000,
@@ -190,6 +221,7 @@ export function createRuntimeUnitManifests(
         WEB_URL: webUrl,
         INTERNAL_API_TOKEN: internalApiToken,
         SKILL_API_TOKEN: skillApiToken,
+        NEXU_DESKTOP_MODE: "true",
       },
     },
     {
@@ -197,8 +229,9 @@ export function createRuntimeUnitManifests(
       label: "Nexu Gateway",
       kind: "service",
       launchStrategy: "managed",
-      runner: "utility-process",
-      modulePath: gatewayModulePath,
+      runner: "spawn",
+      command: "node",
+      args: [gatewayModulePath],
       cwd: gatewaySidecarRoot,
       port: null,
       autoStart: getBooleanEnv("NEXU_DESKTOP_AUTOSTART_GATEWAY", true),
@@ -219,6 +252,9 @@ export function createRuntimeUnitManifests(
         TMPDIR: openclawTempDir,
         RUNTIME_MANAGE_OPENCLAW_PROCESS: "true",
         RUNTIME_GATEWAY_PROBE_ENABLED: "false",
+        // OpenClaw needs Node 22.12+; ensure it's on PATH when gateway
+        // spawns the openclaw binary (which runs `exec node ...`).
+        ...(node22Path ? { PATH: node22Path } : {}),
       },
     },
     {

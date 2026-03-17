@@ -63,6 +63,12 @@ export const docsPruneTargets = [
   "node_modules/smart-buffer/docs",
   "node_modules/socks/docs",
   "node_modules/undici/docs",
+  // OpenClaw docs: only prune large non-essential subdirectories.
+  // MUST keep docs/reference/templates/ — runtime-required workspace templates.
+  "node_modules/openclaw/docs/assets",
+  "node_modules/openclaw/docs/images",
+  "node_modules/openclaw/docs/zh-CN",
+  "node_modules/openclaw/docs/ja-JP",
 ];
 
 export const pruneTargets = [...pruneDependencyTargets, ...docsPruneTargets];
