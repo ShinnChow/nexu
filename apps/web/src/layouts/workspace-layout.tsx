@@ -13,7 +13,6 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
-  Rocket,
   Settings,
   Sparkles,
   X,
@@ -213,7 +212,6 @@ function WorkspaceLayoutInner() {
   const isHomePage =
     location.pathname === "/workspace" ||
     location.pathname === "/workspace/home";
-  const isChannelsPage = location.pathname.includes("/channels");
   const isSkillsPage = location.pathname.includes("/skills");
   const isModelsPage =
     location.pathname.includes("/models") ||
@@ -233,7 +231,6 @@ function WorkspaceLayoutInner() {
   const showEmptyState =
     sessions.length === 0 &&
     !isHomePage &&
-    !isChannelsPage &&
     !isSkillsPage &&
     !isModelsPage &&
     !selectedSessionId;
@@ -243,24 +240,20 @@ function WorkspaceLayoutInner() {
     : null;
   const mobileTitle = isHomePage
     ? t("layout.mobile.home")
-    : isChannelsPage
-      ? t("layout.mobile.deployments")
-      : isSkillsPage
-        ? t("layout.mobile.skills")
-        : isModelsPage
-          ? t("layout.mobile.settings")
-          : selectedSession?.title || t("layout.mobile.conversations");
+    : isSkillsPage
+      ? t("layout.mobile.skills")
+      : isModelsPage
+        ? t("layout.mobile.settings")
+        : selectedSession?.title || t("layout.mobile.conversations");
   const mobileSubtitle = isHomePage
     ? t("layout.mobile.homeSubtitle")
-    : isChannelsPage
-      ? t("layout.mobile.deploymentsSubtitle")
-      : isSkillsPage
-        ? t("layout.mobile.skillsSubtitle")
-        : isModelsPage
-          ? t("layout.mobile.settingsSubtitle")
-          : selectedSession
-            ? `${selectedSession.channelType ?? "web"} · ${formatTime(selectedSession.lastMessageAt || selectedSession.updatedAt)}`
-            : `${sessions.length} conversation${sessions.length === 1 ? "" : "s"}`;
+    : isSkillsPage
+      ? t("layout.mobile.skillsSubtitle")
+      : isModelsPage
+        ? t("layout.mobile.settingsSubtitle")
+        : selectedSession
+          ? `${selectedSession.channelType ?? "web"} · ${formatTime(selectedSession.lastMessageAt || selectedSession.updatedAt)}`
+          : `${sessions.length} conversation${sessions.length === 1 ? "" : "s"}`;
 
   return (
     <div className="flex h-screen">
@@ -332,21 +325,6 @@ function WorkspaceLayoutInner() {
             >
               <Home size={14} />
               {!collapsed && t("layout.nav.home")}
-            </Link>
-            <Link
-              to="/workspace/channels"
-              title={collapsed ? t("layout.nav.deployments") : undefined}
-              onClick={() => track("workspace_deployments_click")}
-              className={cn(
-                "flex items-center gap-2 w-full rounded-lg text-[12px] font-medium transition-colors cursor-pointer mt-0.5",
-                collapsed ? "justify-center p-2" : "px-3 py-2",
-                isChannelsPage
-                  ? "bg-accent/10 text-accent"
-                  : "text-text-muted hover:text-text-primary hover:bg-surface-3",
-              )}
-            >
-              <Rocket size={14} />
-              {!collapsed && t("layout.nav.deployments")}
             </Link>
             <Link
               to="/workspace/skills"
@@ -601,22 +579,6 @@ function WorkspaceLayoutInner() {
                     {t("layout.nav.home")}
                   </Link>
                   <Link
-                    to="/workspace/channels"
-                    onClick={() => {
-                      track("workspace_deployments_click");
-                      setMobileDrawerOpen(false);
-                    }}
-                    className={cn(
-                      "flex items-center gap-2 w-full rounded-lg text-[12px] font-medium transition-colors cursor-pointer mt-0.5 px-3 py-2",
-                      isChannelsPage
-                        ? "bg-accent/10 text-accent"
-                        : "text-text-muted hover:text-text-primary hover:bg-surface-3",
-                    )}
-                  >
-                    <Rocket size={14} />
-                    {t("layout.nav.deployments")}
-                  </Link>
-                  <Link
                     to="/workspace/skills"
                     onClick={() => {
                       track("workspace_skills_click");
@@ -793,7 +755,7 @@ function WorkspaceLayoutInner() {
 
         <main className="flex-1 overflow-y-auto min-h-0">
           {showEmptyState ? (
-            <EmptyState onGoConfig={() => navigate("/workspace/channels")} />
+            <EmptyState onGoConfig={() => navigate("/workspace/settings")} />
           ) : (
             <Outlet />
           )}

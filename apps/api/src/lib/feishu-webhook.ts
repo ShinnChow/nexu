@@ -35,6 +35,7 @@ export async function getFeishuTenantToken(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
+        signal: AbortSignal.timeout(5000), // 5 second timeout
       },
     );
 

@@ -80,6 +80,14 @@ async function resolveDesktopUser(): Promise<{
 }
 
 /**
+ * Pre-warm the desktop user resolution to avoid blocking the first v1 request.
+ * Call this during API startup.
+ */
+export async function warmupDesktopAuth(): Promise<void> {
+  await resolveDesktopUser();
+}
+
+/**
  * Desktop-mode middleware: sets userId on every /api/v1/* request
  * so routes that expect an authenticated user work without browser login.
  */

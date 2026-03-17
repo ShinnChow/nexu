@@ -13,7 +13,12 @@ const cookieDomain = process.env.COOKIE_DOMAIN; // e.g. ".nexu.io"
 
 const options: BetterAuthOptions = {
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-  database: new pg.Pool({ connectionString: databaseUrl }),
+  database: new pg.Pool({
+    connectionString: databaseUrl,
+    max: 3,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 30000,
+  }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,

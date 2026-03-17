@@ -2,16 +2,16 @@ import type { Model } from "@nexu/shared";
 
 export const PLATFORM_MODELS: Model[] = [
   {
-    id: "anthropic/claude-sonnet-4",
-    name: "Claude Sonnet 4",
-    provider: "anthropic",
+    id: "link/claude-sonnet-4-5",
+    name: "Claude Sonnet 4.5",
+    provider: "nexu",
     isDefault: true,
     description: "Recommended - best balance of speed and capability",
   },
   {
-    id: "anthropic/claude-opus-4-6",
-    name: "Claude Opus 4.6",
-    provider: "anthropic",
+    id: "link/claude-opus-4-5",
+    name: "Claude Opus 4.5",
+    provider: "nexu",
     description: "Most capable - ideal for complex tasks",
   },
   {

@@ -363,7 +363,7 @@ export async function generatePoolConfig(
     activeBots[0]?.modelId ??
       loadDesktopSelectedModel() ??
       process.env.DEFAULT_MODEL_ID ??
-      "anthropic/claude-sonnet-4",
+      "claude-sonnet-4-5",
   );
 
   const config: OpenClawConfig = {

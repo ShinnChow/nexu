@@ -169,8 +169,8 @@ export function WelcomePage() {
       badge: t("welcome.option.login.badge"),
       description: t("welcome.option.login.description"),
       highlights: [
-        "Claude Opus 4.6",
-        "GPT-5.4",
+        "Claude Sonnet 4.5",
+        "GPT-4o",
         t("welcome.option.login.highlight.unlimited"),
       ],
       meta: [

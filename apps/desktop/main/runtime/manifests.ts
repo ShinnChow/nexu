@@ -237,6 +237,11 @@ export function createRuntimeUnitManifests(
       label: "Nexu API",
       kind: "service",
       launchStrategy: "managed",
+      // Use spawn instead of utility-process due to Electron bugs:
+      // - https://github.com/electron/electron/issues/43186
+      //   Network requests fail with ECONNRESET after event loop blocking
+      // - https://github.com/electron/electron/issues/44727
+      //   Utility process uses hidden network context, not session.defaultSession
       runner: "spawn",
       command: electronNodeRunner,
       args: [apiModulePath],
@@ -270,6 +275,11 @@ export function createRuntimeUnitManifests(
       label: "Nexu Gateway",
       kind: "service",
       launchStrategy: "managed",
+      // Use spawn instead of utility-process due to Electron bugs:
+      // - https://github.com/electron/electron/issues/43186
+      //   Network requests fail with ECONNRESET after event loop blocking
+      // - https://github.com/electron/electron/issues/44727
+      //   Utility process uses hidden network context, not session.defaultSession
       runner: "spawn",
       command: electronNodeRunner,
       args: [gatewayModulePath],

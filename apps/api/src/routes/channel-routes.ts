@@ -92,6 +92,7 @@ class ChannelSpanHandler {
         Authorization: `Bearer ${botToken}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
+      signal: AbortSignal.timeout(5000), // 5 second timeout
     });
   }
 
@@ -101,6 +102,7 @@ class ChannelSpanHandler {
   async slackBotsInfo(botId: string, botToken: string): Promise<Response> {
     return fetch(`https://slack.com/api/bots.info?bot=${botId}`, {
       headers: { Authorization: `Bearer ${botToken}` },
+      signal: AbortSignal.timeout(5000), // 5 second timeout
     });
   }
 
@@ -674,6 +676,7 @@ export function registerChannelRoutes(app: OpenAPIHono<AppBindings>) {
     try {
       const discordResp = await fetch("https://discord.com/api/v10/users/@me", {
         headers: { Authorization: `Bot ${input.botToken}` },
+        signal: AbortSignal.timeout(5000), // 5 second timeout
       });
       if (!discordResp.ok) {
         const status = discordResp.status;
@@ -700,6 +703,7 @@ export function registerChannelRoutes(app: OpenAPIHono<AppBindings>) {
         "https://discord.com/api/v10/applications/@me",
         {
           headers: { Authorization: `Bot ${input.botToken}` },
+          signal: AbortSignal.timeout(5000), // 5 second timeout
         },
       );
       if (appResp.ok) {
@@ -980,7 +984,12 @@ export function registerChannelRoutes(app: OpenAPIHono<AppBindings>) {
         }
       });
 
-    await Promise.all(backfillPromises);
+    // Fire-and-forget: don't block response waiting for backfill
+    if (backfillPromises.length > 0) {
+      Promise.all(backfillPromises).catch(() => {
+        // Backfill errors are non-critical, logged individually
+      });
+    }
 
     return c.json({ channels: channels.map(formatChannel) }, 200);
   });
@@ -1142,6 +1151,7 @@ export function registerSlackOAuthCallback(app: OpenAPIHono<AppBindings>) {
           code,
           redirect_uri: getSlackRedirectUri(),
         }),
+        signal: AbortSignal.timeout(10000), // 10 second timeout for OAuth
       });
 
       tokenResponse = (await resp.json()) as SlackOAuthV2Response;

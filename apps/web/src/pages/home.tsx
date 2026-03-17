@@ -29,7 +29,7 @@ import {
 } from "../../lib/api/sdk.gen";
 
 function formatModelName(modelId: string | null | undefined): string {
-  if (!modelId) return "Claude Opus 4.6";
+  if (!modelId) return "Claude Sonnet 4.5";
   const withoutProvider = modelId.includes("/")
     ? modelId.split("/").slice(1).join("/")
     : modelId;
@@ -567,11 +567,18 @@ export function HomePage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => navigate("/workspace/channels")}
+                      onClick={() => {
+                        setBotManagerTab("channels");
+                        setShowChannelManager(true);
+                      }}
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium bg-accent text-accent-fg hover:bg-accent-hover transition-colors"
                     >
                       <Plus size={14} />
                       {t("home.connectChannel")}
+                      <ChevronDown
+                        size={12}
+                        className={`opacity-70 transition-transform ${showChannelManager ? "rotate-180" : ""}`}
+                      />
                     </button>
                   )}
                   <button
