@@ -107,6 +107,63 @@ const PROVIDER_META: Record<
     apiKeyPlaceholder: "AIza...",
     defaultProxyUrl: "https://generativelanguage.googleapis.com/v1beta",
   },
+  siliconflow: {
+    name: "SiliconFlow",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://cloud.siliconflow.cn/account/ak",
+    apiKeyPlaceholder: "sk-...",
+    defaultProxyUrl: "https://api.siliconflow.com/v1",
+  },
+  ppio: {
+    name: "PPIO",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://www.ppinfra.com/",
+    apiKeyPlaceholder: "sk-...",
+    defaultProxyUrl: "https://api.ppinfra.com/v3/openai",
+  },
+  openrouter: {
+    name: "OpenRouter",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://openrouter.ai/settings/keys",
+    apiKeyPlaceholder: "sk-or-...",
+    defaultProxyUrl: "https://openrouter.ai/api/v1",
+  },
+  minimax: {
+    name: "MiniMax",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl:
+      "https://platform.minimaxi.com/user-center/basic-information/interface-key",
+    apiKeyPlaceholder: "sk-...",
+    defaultProxyUrl: "https://api.minimaxi.com/anthropic",
+  },
+  kimi: {
+    name: "Kimi",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://platform.moonshot.cn/console/api-keys",
+    apiKeyPlaceholder: "sk-...",
+    defaultProxyUrl: "https://api.moonshot.cn/v1",
+  },
+  glm: {
+    name: "GLM",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://open.bigmodel.cn/usercenter/apikeys",
+    apiKeyPlaceholder: "eyJ...",
+    defaultProxyUrl: "https://open.bigmodel.cn/api/paas/v4",
+  },
+  moonshot: {
+    name: "Kimi",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://platform.moonshot.cn/console/api-keys",
+    apiKeyPlaceholder: "sk-...",
+    defaultProxyUrl: "https://api.moonshot.cn/v1",
+  },
+  zai: {
+    name: "GLM",
+    descriptionKey: "models.provider.openaiCompatible.description",
+    apiDocsUrl: "https://open.bigmodel.cn/usercenter/apikeys",
+    apiKeyPlaceholder: "eyJ...",
+    defaultProxyUrl: "https://open.bigmodel.cn/api/paas/v4",
+  },
   custom: {
     name: "Custom",
     descriptionKey: "models.provider.custom.description",
@@ -117,12 +174,46 @@ const PROVIDER_META: Record<
 // Well-known models per provider (shown when no verify result yet)
 const DEFAULT_MODELS: Record<string, string[]> = {
   anthropic: [
+    "claude-opus-4-1-20250805",
     "claude-opus-4-20250514",
     "claude-sonnet-4-20250514",
-    "claude-haiku-4-5-20251001",
+    "claude-3-5-haiku-20241022",
   ],
-  openai: ["gpt-4o", "gpt-4o-mini", "o1", "o3-mini"],
-  google: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
+  openai: ["gpt-5.1", "gpt-5-mini", "gpt-5-nano", "o4-mini"],
+  google: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"],
+  siliconflow: [
+    "deepseek-ai/DeepSeek-R1",
+    "deepseek-ai/DeepSeek-V3",
+    "Qwen/Qwen3-14B",
+    "moonshotai/Kimi-K2-Instruct",
+  ],
+  ppio: [
+    "deepseek/deepseek-v3-turbo",
+    "deepseek/deepseek-v3/community",
+    "deepseek/deepseek-r1-0528",
+    "deepseek/deepseek-r1/community",
+  ],
+  openrouter: ["auto", "openrouter/hunter-alpha", "openrouter/healer-alpha"],
+  minimax: [
+    "MiniMax-M2.7",
+    "MiniMax-M2.7-highspeed",
+    "MiniMax-M2.5",
+    "MiniMax-VL-01",
+  ],
+  kimi: [
+    "moonshot-v1-8k",
+    "moonshot-v1-32k",
+    "moonshot-v1-128k",
+    "kimi-latest",
+  ],
+  glm: ["glm-4-plus", "glm-4-flash", "glm-4-0520"],
+  moonshot: [
+    "moonshot-v1-8k",
+    "moonshot-v1-32k",
+    "moonshot-v1-128k",
+    "kimi-latest",
+  ],
+  zai: ["glm-4-plus", "glm-4-flash", "glm-4-0520"],
 };
 
 const GITHUB_URL = "https://github.com/nexu-io/nexu";
