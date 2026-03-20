@@ -6,7 +6,7 @@ import {
   useUninstallSkill,
 } from "@/hooks/use-community-catalog";
 import { useLocale } from "@/hooks/use-locale";
-import { getTagLabel, useSkillTranslations } from "@/lib/skill-translations";
+import { getTagLabel } from "@/lib/skill-translations";
 import { cn } from "@/lib/utils";
 import type { InstalledSkill, MinimalSkill } from "@/types/desktop";
 import { Compass, Loader2, Plus, Search, Settings2, Zap } from "lucide-react";
@@ -34,23 +34,18 @@ function SkillCard({
   skill,
   isInstalled,
   categoryLabel,
-  locale = "en",
 }: {
   skill: MinimalSkill;
   isInstalled: boolean;
   categoryLabel?: string;
-  locale?: string;
 }) {
   const installMutation = useInstallSkill();
   const uninstallMutation = useUninstallSkill();
   const [pendingAction, setPendingAction] = useState<
     "install" | "uninstall" | null
   >(null);
-  const { getSkillDescription, getSkillName } = useSkillTranslations(locale);
 
   const isBusy = pendingAction !== null;
-  const displayName = getSkillName(skill.slug, skill.name);
-  const displayDescription = getSkillDescription(skill.slug, skill.description);
 
   async function handleInstall() {
     setPendingAction("install");
@@ -94,7 +89,7 @@ function SkillCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[13px] font-semibold text-text-heading truncate">
-            {displayName}
+            {skill.name}
           </div>
           {categoryLabel && (
             <span className="text-[11px] text-text-muted">{categoryLabel}</span>
@@ -104,7 +99,7 @@ function SkillCard({
 
       {/* Description */}
       <p className="text-[12px] text-text-tertiary leading-[1.5] line-clamp-2 mb-3">
-        {displayDescription}
+        {skill.description}
       </p>
 
       {/* Footer */}
@@ -174,7 +169,6 @@ function SkillCard({
 export function SkillsPage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const { getSkillSearchText } = useSkillTranslations(locale);
   const { data, isLoading, isError } = useCommunitySkills();
   const refreshMutation = useRefreshCatalog();
 
@@ -270,12 +264,12 @@ export function SkillsPage() {
     if (debouncedQuery.trim()) {
       const q = debouncedQuery.toLowerCase();
       list = list.filter((s) =>
-        getSkillSearchText(s.slug, s.name, s.description).includes(q),
+        [s.slug, s.name, s.description].join("\n").toLowerCase().includes(q),
       );
     }
 
     return list;
-  }, [baseSkills, activeTag, debouncedQuery, getSkillSearchText]);
+  }, [baseSkills, activeTag, debouncedQuery]);
 
   // Reset visible count when filters change — deps are intentional triggers
   // biome-ignore lint/correctness/useExhaustiveDependencies: deps trigger reset on filter change
@@ -313,8 +307,8 @@ export function SkillsPage() {
   const categoryTabs = useMemo(() => {
     const base =
       topTab === "explore"
-        ? [{ id: "all", label: "All", count: exploreSkills.length }]
-        : [{ id: "all", label: "All", count: yourSkillsList.length }];
+        ? [{ id: "all", label: t("skills.all"), count: exploreSkills.length }]
+        : [{ id: "all", label: t("skills.all"), count: yourSkillsList.length }];
 
     const tagTabs = topTags
       .filter((t) => {
@@ -331,7 +325,7 @@ export function SkillsPage() {
       });
 
     return [...base, ...tagTabs];
-  }, [topTab, exploreSkills, yourSkillsList, topTags, locale]);
+  }, [topTab, exploreSkills, yourSkillsList, topTags, locale, t]);
 
   // Yours sub-tab counts
   const recommendedCount = yourSkillsList.filter((s) =>
@@ -578,7 +572,6 @@ export function SkillsPage() {
                 categoryLabel={
                   firstTag ? getTagLabel(firstTag, locale) : undefined
                 }
-                locale={locale}
               />
             );
           })}

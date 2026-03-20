@@ -4,7 +4,7 @@ import {
 } from "@/hooks/use-community-catalog";
 import { useLocale } from "@/hooks/use-locale";
 import "@/lib/api";
-import { getTagLabel, useSkillTranslations } from "@/lib/skill-translations";
+import { getTagLabel } from "@/lib/skill-translations";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -286,7 +286,6 @@ function SkillMdPreview({ content }: { content: string }) {
 export function CommunitySkillDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t, locale } = useLocale();
-  const { getSkillDescription, getSkillName } = useSkillTranslations(locale);
   const installMutation = useInstallSkill();
   const uninstallMutation = useUninstallSkill();
   const [pendingAction, setPendingAction] = useState<
@@ -354,9 +353,6 @@ export function CommunitySkillDetailPage() {
     );
   }
 
-  const displayName = getSkillName(data.slug, data.name);
-  const displayDescription = getSkillDescription(data.slug, data.description);
-
   return (
     <div className="min-h-full bg-surface-0">
       <div className="max-w-3xl mx-auto px-6 py-8">
@@ -373,7 +369,7 @@ export function CommunitySkillDetailPage() {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div className="min-w-0">
             <h1 className="text-[20px] font-semibold text-text-primary mb-1">
-              {displayName}
+              {data.name}
             </h1>
             <p className="text-[13px] text-text-muted font-mono mb-2">
               {data.slug}
@@ -384,7 +380,7 @@ export function CommunitySkillDetailPage() {
               )}
             </p>
             <p className="text-[13px] text-text-secondary leading-relaxed">
-              {displayDescription}
+              {data.description}
             </p>
           </div>
 
