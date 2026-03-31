@@ -785,6 +785,9 @@ export async function bootstrapWithLaunchd(
       await launchd.installService(labels.controller, retryControllerPlist);
       await launchd.startService(labels.controller);
       await ensureRunning(labels.controller, "controller");
+      // Controller was restarted — must wait for readiness again even if
+      // it was previously healthy (attach path sets needsControllerReady=false).
+      needsControllerReady = true;
       log(
         `[bootstrap] OpenClaw reassigned to port ${newPort}, controller restarted`,
       );
