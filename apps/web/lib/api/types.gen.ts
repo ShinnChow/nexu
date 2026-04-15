@@ -3533,7 +3533,7 @@ export type GetApiV1SkillhubCatalogResponses = {
             status: 'queued' | 'downloading' | 'installing-deps' | 'done' | 'failed';
             position: number;
             error: string;
-            errorCode: 'skill_not_found' | 'rate_limit' | 'unknown';
+            errorCode: 'skill_not_found' | 'rate_limit' | 'npm_missing' | 'deps_install_failed' | 'unknown';
             retries: number;
             enqueuedAt: string;
         }>;
@@ -3691,11 +3691,13 @@ export type PostApiV1SkillhubImportData = {
 
 export type PostApiV1SkillhubImportErrors = {
     /**
-     * Bad request
+     * Import rejected or failed
      */
     400: {
-        ok: false;
-        error: string;
+        ok: boolean;
+        slug?: string;
+        error?: string;
+        errorCode?: 'skill_not_found' | 'rate_limit' | 'npm_missing' | 'deps_install_failed' | 'unknown';
     };
 };
 
@@ -3709,6 +3711,7 @@ export type PostApiV1SkillhubImportResponses = {
         ok: boolean;
         slug?: string;
         error?: string;
+        errorCode?: 'skill_not_found' | 'rate_limit' | 'npm_missing' | 'deps_install_failed' | 'unknown';
     };
 };
 
